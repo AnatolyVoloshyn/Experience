@@ -1,0 +1,20 @@
+$ cat .gitignore
+#.gitignore
+/PROJECT/__history
+/DCU
+/SOURCE/**/__history
+*.ini
+*.exe
+*.rsm
+*.local
+*.dsk
+*.identcache
+*.stat
+*.~dsk
+*.pec2bac
+*.xml
+*.vlb
+*.res
+*.dsv
+*.xlsx
+*.xlsm
