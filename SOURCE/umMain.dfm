@@ -2,7 +2,7 @@ object frmMain: TfrmMain
   Left = 0
   Top = 0
   Caption = #1042#1080#1089#1083#1091#1075#1072' '#1086'/'#1089
-  ClientHeight = 613
+  ClientHeight = 680
   ClientWidth = 1186
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -72,7 +72,7 @@ object frmMain: TfrmMain
     end
     object lbFolder: TcxLabel
       Left = 486
-      Top = 6
+      Top = 8
       AutoSize = False
       ParentFont = False
       Style.BorderStyle = ebsNone
@@ -156,14 +156,126 @@ object frmMain: TfrmMain
       TabOrder = 4
       Transparent = True
     end
+    object SST: TdxSpreadSheet
+      Left = 771
+      Top = 12
+      Width = 77
+      Height = 57
+      LookAndFeel.NativeStyle = True
+      Visible = False
+      Data = {
+        9402000044585353763242461000000042465320000000000000000001000101
+        010100000100000001004246532000000000424653200100000001000000200B
+        00000007000000430061006C0069006200720069000000000000002000000020
+        0000000020000000000020000000000020000000000020000007000000470045
+        004E004500520041004C00000000000002000000000000000001424653200100
+        0000424653201700000054006400780053007000720065006100640053006800
+        6500650074005400610062006C00650056006900650077000600000053006800
+        650065007400310001FFFFFFFFFFFFFFFF640000000200000002000000020000
+        0055000000140000000200000002000000000200000002000000000000010000
+        0000000101000042465320550000000000000042465320000000004246532014
+        0000000000000042465320000000000000000000000000010000000000000000
+        0000000000000000000000424653200000000002020000000000000000000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        0000000000000000000000000000000064000000000000000000000000000000
+        0000000000000000000000000000000000000000000000000000000000000000
+        0000000200020200020000000000000000000000000000000000020000000000
+        0000000000000000000000000000000000000000000000000000000000000202
+        00000000000000004246532000000000000000000500000056006F006C006F00
+        730000000000000000000500000056006F006C006F0073000000000000000000
+        0F48D6B9EA98E6400F48D6B9EA98E6400000000000000000}
+    end
   end
   object Panel2: TPanel
     Left = 0
     Top = 73
     Width = 1186
-    Height = 540
+    Height = 607
     Align = alClient
     TabOrder = 1
+    ExplicitTop = 69
+    ExplicitHeight = 540
+    object Panel3: TPanel
+      Left = 1
+      Top = 1
+      Width = 1184
+      Height = 605
+      Align = alClient
+      TabOrder = 0
+      ExplicitLeft = 454
+      ExplicitWidth = 732
+      ExplicitHeight = 538
+      object Panel8: TPanel
+        Left = 1
+        Top = 1
+        Width = 1182
+        Height = 36
+        Align = alTop
+        TabOrder = 0
+        ExplicitWidth = 1138
+        DesignSize = (
+          1182
+          36)
+        object btnExportFile: TcxButton
+          Left = 848
+          Top = 4
+          Width = 194
+          Height = 25
+          Action = acSaveExcelFile
+          Anchors = [akTop, akRight]
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 0
+          ExplicitLeft = 809
+        end
+        object cxButton3: TcxButton
+          Left = 1048
+          Top = 4
+          Width = 121
+          Height = 25
+          Action = acAbout
+          Anchors = [akTop, akRight]
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 1
+          ExplicitLeft = 596
+        end
+      end
+      object SSR: TdxSpreadSheet
+        Left = 1
+        Top = 37
+        Width = 1182
+        Height = 567
+        Align = alClient
+        LookAndFeel.NativeStyle = False
+        ExplicitLeft = 2
+        ExplicitTop = 36
+        ExplicitHeight = 500
+        Data = {
+          9402000044585353763242461000000042465320000000000000000001000101
+          010100000100000001004246532000000000424653200100000001000000200B
+          00000007000000430061006C0069006200720069000000000000002000000020
+          0000000020000000000020000000000020000000000020000007000000470045
+          004E004500520041004C00000000000002000000000000000001424653200100
+          0000424653201700000054006400780053007000720065006100640053006800
+          6500650074005400610062006C00650056006900650077000600000053006800
+          650065007400310001FFFFFFFFFFFFFFFF640000000200000002000000020000
+          0055000000140000000200000002000000000200000002000000000000010000
+          0000000101000042465320550000000000000042465320000000004246532014
+          0000000000000042465320000000000000000000000000010000000000000000
+          0000000000000000000000424653200000000002020000000000000000000000
+          0000000000000000000000000000000000000000000000000000000000000000
+          0000000000000000000000000000000000000000000000000000000000000000
+          0000000000000000000000000000000064000000000000000000000000000000
+          0000000000000000000000000000000000000000000000000000000000000000
+          0000000200020200020000000000000000000000000000000000020000000000
+          0000000000000000000000000000000000000000000000000000000000000202
+          00000000000000004246532000000000000000000500000056006F006C006F00
+          730000000000000000000500000056006F006C006F0073000000000000000000
+          0F48D6B9EA98E6400F48D6B9EA98E6400000000000000000}
+      end
+    end
   end
   object cxShellBrowserDialog: TcxShellBrowserDialog
     Options.ShowHidden = True
@@ -387,16 +499,47 @@ object frmMain: TfrmMain
       ImageIndex = 5
       OnExecute = acOpenFolderExecute
     end
-    object acAbout: TAction
-      Caption = #1054' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
-      ImageIndex = 4
-    end
     object acExecute: TAction
       Caption = #1047#1072#1087#1091#1089#1090#1080#1090#1100' '#1082#1086#1083#1083#1072#1081#1076#1077#1088' '
       Enabled = False
       Hint = #1047#1072#1087#1091#1089#1090#1080#1090#1100' '#1082#1086#1083#1083#1072#1081#1076#1077#1088' '
       ImageIndex = 6
       OnExecute = acExecuteExecute
+    end
+    object acAbout: TAction
+      Caption = #1054' '#1087#1088#1086#1075#1088#1072#1084#1084#1077
+      ImageIndex = 4
+      OnExecute = acAboutExecute
+    end
+    object acSaveExcelFile: TAction
+      Caption = #1057#1086#1093#1088#1072#1085#1080#1090#1100' '#1074' Excel'
+      Hint = #1057#1086#1093#1088#1072#1085#1080#1090#1100' '#1074' Excel'
+      ImageIndex = 3
+      OnExecute = acSaveExcelFileExecute
+    end
+  end
+  object dxSaveFileDialog: TdxSaveFileDialog
+    Filter = 'Excel '#1092#1072#1081#1083#1099'|*.xlsx'
+    Options = [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing]
+    Left = 1053
+    Top = 513
+  end
+  object MD: TdxMemData
+    Indexes = <>
+    SortOptions = []
+    Left = 1053
+    Top = 458
+    object MDFiirst: TDateField
+      FieldName = 'Fiirst'
+    end
+    object MDSecond: TDateField
+      FieldName = 'Second'
+    end
+    object MDR: TIntegerField
+      FieldName = 'R'
+    end
+    object MDC: TIntegerField
+      FieldName = 'C'
     end
   end
 end

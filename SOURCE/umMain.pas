@@ -8,7 +8,16 @@ uses
   cxShellBrowserDialog, cxGraphics, cxLookAndFeels, cxLookAndFeelPainters,
   Vcl.Menus, cxButtons, cxLocalization, System.ImageList, Vcl.ImgList,
   cxImageList, System.Actions, Vcl.ActnList, cxControls, cxContainer, cxEdit,
-  cxLabel, Vcl.WinXPickers, dxGDIPlusClasses, cxImage, System.IOUtils, System.Types;
+  cxLabel, Vcl.WinXPickers, dxGDIPlusClasses, cxImage, System.IOUtils, System.Types, System.Masks, System.StrUtils,
+  dxCore, dxCoreClasses, dxHashUtils, dxSpreadSheetCore,
+  dxSpreadSheetCoreFormulas, dxSpreadSheetCoreHistory, dxSpreadSheetCoreStyles,
+  dxSpreadSheetCoreStrs, dxSpreadSheetConditionalFormatting,
+  dxSpreadSheetConditionalFormattingRules, dxSpreadSheetClasses,
+  dxSpreadSheetContainers, dxSpreadSheetFormulas, dxSpreadSheetHyperlinks,
+  dxSpreadSheetFunctions, dxSpreadSheetStyles, dxSpreadSheetGraphics,
+  dxSpreadSheetPrinting, dxSpreadSheetTypes, dxSpreadSheetUtils,
+  dxSpreadSheetFormattedTextUtils, dxBarBuiltInMenu, dxSpreadSheet,
+  dxShellDialogs, Data.DB, dxmdaset, Vcl.Grids, Vcl.DBGrids;
 
 type
   TfrmMain = class(TForm)
@@ -29,14 +38,34 @@ type
     Label3: TLabel;
     cxImage1: TcxImage;
     Panel2: TPanel;
+    acSaveExcelFile: TAction;
+    Panel3: TPanel;
+    Panel8: TPanel;
+    btnExportFile: TcxButton;
+    cxButton3: TcxButton;
+    SSR: TdxSpreadSheet;
+    dxSaveFileDialog: TdxSaveFileDialog;
+    MD: TdxMemData;
+    MDFiirst: TDateField;
+    MDSecond: TDateField;
+    MDR: TIntegerField;
+    MDC: TIntegerField;
+    SST: TdxSpreadSheet;
     procedure FormCreate(Sender: TObject);
     procedure acOpenFolderExecute(Sender: TObject);
     procedure DatePicker1Change(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure acExecuteExecute(Sender: TObject);
+    procedure acSaveExcelFileExecute(Sender: TObject);
+    procedure acAboutExecute(Sender: TObject);
   private
     { Private declarations }
-    function GetFileCount(const APath: string; Mask: string): Integer;
+    const Mask ='вислуга*.xlsx';
+    //const Mask ='вислуга ВОЛОШИН.xlsx';
+    var Folder:string;
+    var DateRasc:TDateTime;
+    function GetFileCount(const APath:string; Mask: string): Integer;
+    function CopyFile_ (sFileName:string):string;
   public
     { Public declarations }
   end;
@@ -47,7 +76,7 @@ var
 implementation
 
 uses
- unExcelFunctions, Vcl.Themes, unToolsFunctions;
+ unExcelFunctions, Vcl.Themes, unToolsFunctions, unAbout;
 
 {$R *.dfm}
 {$R RUS.RES}
@@ -91,10 +120,12 @@ end;
 procedure TfrmMain.DatePicker1Change(Sender: TObject);
 begin
  SaveDateTimeIniFiles('Experience', 'DATE', DatePicker1.Date);
+ DateRasc:= DatePicker1.Date;
 end;
 
 procedure TfrmMain.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
+  SaveStringIniFiles('Experience','PATH_FILES', lbFolder.Caption);
   SaveDateTimeIniFiles('Experience', 'DATE', DatePicker1.Date);
 end;
 
@@ -117,47 +148,300 @@ begin
     //
   end;
 
-  lbFolder.Caption:=ReadStringIniFiles('Experience','PATH_FILES', '');
+  lbFolder.Caption:=ReadStringIniFiles('Experience','PATH_FILES', '\\A4785\Disc\ВИСЛУГА РОКІВ А4785\Вислуга років');
   DatePicker1.Date:= ReadDateTimeIniFiles('Experience', 'DATE', DATE);
+  DateRasc:= DatePicker1.Date;
 
   if (DirectoryExists(lbFolder.Caption)) and (DatePicker1.Date<>0) then acExecute.Enabled:=True;
-
 end;
 
-function TfrmMain.GetFileCount(const APath: string; Mask: string): Integer;
+function TfrmMain.GetFileCount(const APath:string; Mask: string): Integer;
 var
   Files: TStringDynArray;
 begin
   // Получаем массив путей к файлам
-  Files := TDirectory.GetFiles(APath, Mask);
+  Files := TDirectory.GetFiles(APath,
+           function(const Path: string; const SearchRec: TSearchRec): Boolean
+           begin
+             Result := MatchesMask(WideUpperCase(SearchRec.Name), WideUpperCase(Mask));
+           end);
+
   // Возвращаем размер массива
   Result := Length(Files);
-end;
+ end;
 
 procedure TfrmMain.acExecuteExecute(Sender: TObject);
 var
- FileName, Folder, Mask: string;
- Files: TStringDynArray;
+ FileName, Folder, FileName_temp: string;
+ col,row,i,current_Worksheet, current_row:integer;
+ temp_datetime:TDateTime;
 begin
   Folder:=lbFolder.Caption;
-  Mask:='*.xlsx';
-  ShowProgress(Self, '', GetFileCount(Folder, Mask), 'Анализ указанной папки...');
-
-  for FileName in TDirectory.GetFiles(Folder, Mask) do
+  if (DirectoryExists(Folder)) and (DatePicker1.Date<>0) and (GetFileCount(Folder, Mask)>0) then
   begin
+     //Рисуем заголовок в основном excele
+     SSR.ClearAll;
+     SSR.OptionsView.R1C1Reference:=True;
+     current_Worksheet:=AddWorksheet(SSR,'Результат анализа файлов выслуг');
+     SSR.Sheets[current_Worksheet].BeginUpdate;
 
-    if Copy(ExtractFileName(FileName), 1, 2)<>'~$' then
+     current_row:=1;
+     DrawCell(SSR,
+             'Список вислуг о/с на '+FormatDateTime('dd.mm.yyyy',DateRasc), current_Worksheet,current_row,1,True,ssahLeft,ssavCenter,$00,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              0,0,sscfsSolid);
+
+     DrawCell(SSR,
+             'Сформирован: '+FormatDateTime('dd.mm.yyyy HH:NN:SS',now), current_Worksheet,current_row,5,True,ssahLeft,ssavCenter,$00,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              0,0,sscfsSolid);
+
+     current_row:=2;
+     SetColumnWidth(SSR, current_Worksheet, 1, 30);
+     DrawCellMergeCells(SSR,current_Worksheet, 1, current_row, 1, current_row+1,
+                        0, sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+                        True, '№ п/п',
+                        current_row, 1, True, ssahCenter, ssavCenter, $31, True, False, 'Calibri', 11, [], 0,
+                        $00ECFFD8 ,0, sscfsSolid, True);
+
+     SetColumnWidth(SSR, current_Worksheet, 2, 250);
+     DrawCellMergeCells(SSR,current_Worksheet, 2, current_row, 2, current_row+1,
+                        0, sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+                        True, 'Назва файлу',
+                        current_row, 2, True, ssahCenter, ssavCenter, $31, True, False, 'Calibri', 11, [], 0,
+                        $00ECFFD8 ,0, sscfsSolid, True);
+
+     SetColumnWidth(SSR, current_Worksheet, 3, 300);
+     DrawCellMergeCells(SSR,current_Worksheet, 3, current_row, 3, current_row+1,
+                        0, sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+                        True, 'ПІБ у файлі',
+                        current_row, 3, True, ssahCenter, ssavCenter, $31, True, False, 'Calibri', 11, [], 0,
+                        $00ECFFD8 ,0, sscfsSolid, True);
+
+
+     SetColumnWidth(SSR, current_Worksheet, 4, 50);
+     SetColumnWidth(SSR, current_Worksheet, 5, 50);
+     SetColumnWidth(SSR, current_Worksheet, 6, 50);
+     DrawCellMergeCells(SSR,current_Worksheet, 4, current_row, 6, current_row,
+                        0, sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+                        True, 'Календарна вислуга',
+                        current_row, 4, True, ssahCenter, ssavCenter, $31, True, False, 'Calibri', 11, [], 0,
+                        $0097FCFC ,0, sscfsSolid, True);
+     DrawCell(SSR,
+             'Роки', current_Worksheet,current_row+1,4,True,ssahCenter,ssavCenter,$31,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              $0097FCFC,0,sscfsSolid);
+     DrawCell(SSR,
+             'Міс.', current_Worksheet,current_row+1,5,True,ssahCenter,ssavCenter,$31,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              $0097FCFC,0,sscfsSolid);
+     DrawCell(SSR,
+             'Дні', current_Worksheet,current_row+1,6,True,ssahCenter,ssavCenter,$31,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              $0097FCFC,0,sscfsSolid);
+
+     SetColumnWidth(SSR, current_Worksheet, 7, 50);
+     SetColumnWidth(SSR, current_Worksheet, 8, 50);
+     SetColumnWidth(SSR, current_Worksheet, 9, 50);
+     DrawCellMergeCells(SSR,current_Worksheet, 7, current_row, 9, current_row,
+                        0, sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+                        True, 'Пільгова вислуга',
+                        current_row, 7, True, ssahCenter, ssavCenter, $31, True, False, 'Calibri', 11, [], 0,
+                        $00D9D9D9 ,0, sscfsSolid, True);
+     DrawCell(SSR,
+             'Роки', current_Worksheet,current_row+1,7,True,ssahCenter,ssavCenter,$31,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              $00D9D9D9,0,sscfsSolid);
+     DrawCell(SSR,
+             'Міс.', current_Worksheet,current_row+1,8,True,ssahCenter,ssavCenter,$31,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              $00D9D9D9,0,sscfsSolid);
+     DrawCell(SSR,
+             'Дні', current_Worksheet,current_row+1,9,True,ssahCenter,ssavCenter,$31,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              $00D9D9D9,0,sscfsSolid);
+
+     SetColumnWidth(SSR, current_Worksheet, 10, 50);
+     SetColumnWidth(SSR, current_Worksheet, 11, 50);
+     SetColumnWidth(SSR, current_Worksheet, 12, 50);
+     DrawCellMergeCells(SSR,current_Worksheet, 10, current_row, 12, current_row,
+                        0, sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+                        True, 'Загальна вислуга',
+                        current_row, 10, True, ssahCenter, ssavCenter, $31, True, False, 'Calibri', 11, [], 0,
+                        $0000C0FF ,0, sscfsSolid, True);
+     DrawCell(SSR,
+             'Роки', current_Worksheet,current_row+1,10,True,ssahCenter,ssavCenter,$31,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              $0000C0FF,0,sscfsSolid);
+     DrawCell(SSR,
+             'Міс.', current_Worksheet,current_row+1,11,True,ssahCenter,ssavCenter,$31,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              $0000C0FF,0,sscfsSolid);
+     DrawCell(SSR,
+             'Дні', current_Worksheet,current_row+1,12,True,ssahCenter,ssavCenter,$31,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              $0000C0FF,0,sscfsSolid);
+
+
+
+     current_row:=3;
+     ShowProgress(Self, '', GetFileCount(Folder, Mask), 'Анализ указанной папки...');
+     for FileName in TDirectory.GetFiles(Folder,
+                     function(const Path: string; const SearchRec: TSearchRec): Boolean
+                     begin
+                       Result := MatchesMask(WideUpperCase(SearchRec.Name), WideUpperCase(Mask));
+                     end)
+    do
     begin
-       UpdateProgressCaption(ExtractFileName(FileName), 'Анализ указанной папки...');
-       StepProgress;
-       Sleep(50);
+         try
+           UpdateProgressCaption(ExtractFileName(FileName), 'Анализ указанной папки...');
+           StepProgress;
+           Application.ProcessMessages;
+           FileName_temp:=ExtractFileDir(Application.ExeName)+'\'+ CopyFile_(FileName);
 
+           current_row:=current_row+1;
+           //Работаем с временным файлом
+           SST.ClearAll;
+           SST.BeginUpdate;
+           SST.LoadFromFile(FileName_temp);
+           SST.OptionsView.R1C1Reference:=True;
+
+           MD.DisableControls;
+           if MD.Active then MD.Close;
+           MD.Open;
+           col:=2;
+           i:=0;
+           for row:= 4 to 119 do
+           begin
+             if TryStrToDate(Get_Cell(SST, 0, row, col).AsString, temp_datetime) then
+             begin
+               i:=i+1;
+               if Odd(i) then
+               begin
+                MD.Append;
+                MD.FieldByName('Fiirst').AsDateTime:= temp_datetime;
+                MD.Post;
+               end else
+               begin
+                MD.Edit;
+                MD.FieldByName('Second').AsDateTime:= temp_datetime;
+                MD.FieldByName('R').Value:= row;
+                MD.FieldByName('C').Value:= col;
+                MD.Post;
+               end;
+             end;
+           end;
+           MD.Last;
+           DrawCellOnlyValue(SST,0,MD.FieldByName('R').AsInteger, MD.FieldByName('C').AsInteger, DateToStr(DateRasc), True);
+           RecalcFormulsWorksheet(SST);
+           Application.ProcessMessages;
+
+          DrawCell(SSR,
+              IntToStr(current_row-3), current_Worksheet,current_row,1,True,ssahRight,ssavCenter,$01,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              0,0,sscfsSolid);
+
+          DrawCell(SSR,
+              ExtractFileName(FileName), current_Worksheet,current_row,2,True,ssahLeft,ssavCenter,$31,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              0,0,sscfsSolid);
+
+          DrawCell(SSR,
+              Get_Cell(SST, 0, 1, 2).AsString, current_Worksheet,current_row,3,True,ssahLeft,ssavCenter,$31,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              0,0,sscfsSolid);
+
+          ///////
+          DrawCell(SSR,
+              Get_Cell(SST, 1, 89, 10).AsString, current_Worksheet,current_row,4,True,ssahRight,ssavCenter,$01,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              0,0,sscfsSolid);
+
+          DrawCell(SSR,
+              Get_Cell(SST, 1, 89, 11).AsString, current_Worksheet,current_row,5,True,ssahRight,ssavCenter,$01,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              0,0,sscfsSolid);
+
+          DrawCell(SSR,
+              Get_Cell(SST, 1, 89, 12).AsString, current_Worksheet,current_row,6,True,ssahRight,ssavCenter,$01,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              0,0,sscfsSolid);
+
+          ///////
+          DrawCell(SSR,
+              Get_Cell(SST, 1, 91, 10).AsString, current_Worksheet,current_row,7,True,ssahRight,ssavCenter,$01,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              0,0,sscfsSolid);
+
+          DrawCell(SSR,
+              Get_Cell(SST, 1, 91, 11).AsString, current_Worksheet,current_row,8,True,ssahRight,ssavCenter,$01,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              0,0,sscfsSolid);
+
+          DrawCell(SSR,
+              Get_Cell(SST, 1, 91, 12).AsString, current_Worksheet,current_row,9,True,ssahRight,ssavCenter,$01,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              0,0,sscfsSolid);
+
+          ///////
+          DrawCell(SSR,
+              Get_Cell(SST, 1, 93, 10).AsString, current_Worksheet,current_row,10,True,ssahRight,ssavCenter,$01,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              0,0,sscfsSolid);
+
+          DrawCell(SSR,
+              Get_Cell(SST, 1, 93, 11).AsString, current_Worksheet,current_row,11,True,ssahRight,ssavCenter,$01,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              0,0,sscfsSolid);
+
+          DrawCell(SSR,
+              Get_Cell(SST, 1, 93, 12).AsString, current_Worksheet,current_row,12,True,ssahRight,ssavCenter,$01,False,False,'Calibri', 11, [], 0,
+              0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+              0,0,sscfsSolid);
+
+
+           SST.EndUpdate;
+           Application.ProcessMessages;
+         finally
+           if FileExists(FileName_temp) then
+           DeleteFile(FileName_temp);
+         end;
     end;
+    DelProgress;
+    FreezeRows(SSR, current_Worksheet, 3);
+    SSR.Sheets[current_Worksheet].EndUpdate;
   end;
-  DelProgress;
 end;
 
+function TfrmMain.CopyFile_(sFileName:string):string;
+begin
+  if FileExists(sFileName) then
+  begin
+   CopyFile(PWideChar(sFileName), PWideChar(ChangeFileExt(ExtractFileName(sFileName),'')+'_временный.xlsx'), False);
+   Result:=ChangeFileExt(ExtractFileName(sFileName),'')+'_временный.xlsx';
+  end;
+end;
 
+procedure TfrmMain.acSaveExcelFileExecute(Sender: TObject);
+begin
+ if dxSaveFileDialog.Execute then
+ begin
+   if ExtractFileExt(dxSaveFileDialog.FileName)='' then
+   SSR.SaveToFile(dxSaveFileDialog.FileName+'.xlsx') else
+   SSR.SaveToFile(dxSaveFileDialog.FileName);
+ end;
+
+end;
+
+procedure TfrmMain.acAboutExecute(Sender: TObject);
+begin
+  frmAbout := TfrmAbout.Create(frmMain);
+  try
+    frmAbout.ShowModal;
+  finally
+    frmAbout.Free;
+  end;
+end;
 
 
 end.

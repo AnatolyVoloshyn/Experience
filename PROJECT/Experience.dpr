@@ -8,7 +8,8 @@ uses
   unIni in '..\SOURCE\unIni.pas',
   unExcelFunctions in '..\SOURCE\unExcelFunctions.pas',
   Vcl.Themes,
-  Vcl.Styles;
+  Vcl.Styles,
+  unAbout in '..\SOURCE\unAbout.pas' {frmAbout};
 
 {$R *.res}
 

@@ -348,6 +348,16 @@ procedure DrawCellOnlyColor(SS:TdxSpreadSheet;
                                  );
 
 
+procedure DrawCellOnlyValue(SS:TdxSpreadSheet;
+                            Worksheet:integer; //Страница
+                            n_row:integer;  //Координаты строки
+                            n_col:integer; //Координаты столбца
+                            CellText:String; //То, что хотим показать
+                            FormulaChecking:boolean = True
+                                 );
+
+
+
 
 procedure CreateHyperlink(SS:TdxSpreadSheet; Worksheet:integer; Row:integer; Column:integer; ScreenTip: string; Value:variant);
 function Get_Cell(SS:TdxSpreadSheet; Worksheet, Row:integer; Column:integer):TdxSpreadSheetCell;
@@ -1046,6 +1056,21 @@ procedure DrawCellOnlyColor(SS:TdxSpreadSheet;
  end;
 
 
+procedure DrawCellOnlyValue(SS:TdxSpreadSheet;
+                            Worksheet:integer; //Страница
+                            n_row:integer;  //Координаты строки
+                            n_col:integer; //Координаты столбца
+                            CellText:String; //То, что хотим показать
+                            FormulaChecking:boolean = True //Это формула?
+                            );
+ var
+   Cell: TdxSpreadSheetCell;
+   ATableView: TdxSpreadSheetTableView;
+begin
+   ATableView := TdxSpreadSheetTableView(SS.Sheets[Worksheet]);
+   Cell:=ATableView.CreateCell(n_row-1, n_col-1);
+   Cell.SetText(CellText, FormulaChecking);
+end;
 
 
 
