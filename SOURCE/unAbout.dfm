@@ -25,7 +25,7 @@ object frmAbout: TfrmAbout
       Top = 12
       Width = 75
       Height = 15
-      Caption = #1042#1077#1088#1089#1080#1103' 1.0.0.0'
+      Caption = #1042#1077#1088#1089#1080#1103' 1.0.0.1'
     end
     object Label2: TLabel
       Left = 16
@@ -63,7 +63,6 @@ object frmAbout: TfrmAbout
       Height = 24
       Align = alTop
       TabOrder = 0
-      ExplicitLeft = 0
       object Label3: TLabel
         Left = 125
         Top = 3

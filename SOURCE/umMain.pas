@@ -51,6 +51,11 @@ type
     MDR: TIntegerField;
     MDC: TIntegerField;
     SST: TdxSpreadSheet;
+    MDP: TdxMemData;
+    DateField1: TDateField;
+    DateField2: TDateField;
+    IntegerField1: TIntegerField;
+    IntegerField2: TIntegerField;
     procedure FormCreate(Sender: TObject);
     procedure acOpenFolderExecute(Sender: TObject);
     procedure DatePicker1Change(Sender: TObject);
@@ -62,6 +67,7 @@ type
     { Private declarations }
     const Mask ='вислуга*.xlsx';
     //const Mask ='вислуга ВОЛОШИН.xlsx';
+    //const Mask ='вислуга БАСЮК.xlsx';
     var Folder:string;
     var DateRasc:TDateTime;
     function GetFileCount(const APath:string; Mask: string): Integer;
@@ -179,10 +185,19 @@ begin
   Folder:=lbFolder.Caption;
   if (DirectoryExists(Folder)) and (DatePicker1.Date<>0) and (GetFileCount(Folder, Mask)>0) then
   begin
-     //Рисуем заголовок в основном excele
-     SSR.ClearAll;
+
+//     //Рисуем заголовок в основном excele
+//     SSR.ClearAll;
+//     SSR.OptionsView.R1C1Reference:=True;
+//     current_Worksheet:=AddWorksheet(SSR,'Результат анализа файлов выслуг');
+//     SSR.Sheets[current_Worksheet].BeginUpdate;
+
+     //Загружаем шаблон
+     SSR.LoadFromFile(ExtractFileDir(Application.ExeName)+'\Вислуга-Вся.xlsx');
      SSR.OptionsView.R1C1Reference:=True;
-     current_Worksheet:=AddWorksheet(SSR,'Результат анализа файлов выслуг');
+     current_Worksheet:=SSR.Sheets[0].Index;
+     ClearCells_(SSR,current_Worksheet, 1, 54, 4, 1000);
+     SetFocusedCell_(SSR,current_Worksheet,1,4);
      SSR.Sheets[current_Worksheet].BeginUpdate;
 
      current_row:=1;
@@ -195,7 +210,12 @@ begin
              'Сформирован: '+FormatDateTime('dd.mm.yyyy HH:NN:SS',now), current_Worksheet,current_row,5,True,ssahLeft,ssavCenter,$00,False,False,'Calibri', 11, [], 0,
               0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
               0,0,sscfsSolid);
+     //Удаляем начинку
 
+
+
+     //Уже есть в шаблоне
+     {
      current_row:=2;
      SetColumnWidth(SSR, current_Worksheet, 1, 30);
      DrawCellMergeCells(SSR,current_Worksheet, 1, current_row, 1, current_row+1,
@@ -281,9 +301,12 @@ begin
              'Дні', current_Worksheet,current_row+1,12,True,ssahCenter,ssavCenter,$31,False,False,'Calibri', 11, [], 0,
               0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
               $0000C0FF,0,sscfsSolid);
+     }
+     //Конец Уже есть в шаблоне
 
 
 
+     //Пишем начинку
      current_row:=3;
      ShowProgress(Self, '', GetFileCount(Folder, Mask), 'Анализ указанной папки...');
      for FileName in TDirectory.GetFiles(Folder,
@@ -306,6 +329,7 @@ begin
            SST.LoadFromFile(FileName_temp);
            SST.OptionsView.R1C1Reference:=True;
 
+           ///////////////////////////////
            MD.DisableControls;
            if MD.Active then MD.Close;
            MD.Open;
@@ -335,6 +359,7 @@ begin
            DrawCellOnlyValue(SST,0,MD.FieldByName('R').AsInteger, MD.FieldByName('C').AsInteger, DateToStr(DateRasc), True);
            RecalcFormulsWorksheet(SST);
            Application.ProcessMessages;
+           /////////////////////////////////////////////////////////
 
           DrawCell(SSR,
               IntToStr(current_row-3), current_Worksheet,current_row,1,True,ssahRight,ssavCenter,$01,False,False,'Calibri', 11, [], 0,
@@ -398,9 +423,58 @@ begin
               Get_Cell(SST, 1, 93, 12).AsString, current_Worksheet,current_row,12,True,ssahRight,ssavCenter,$01,False,False,'Calibri', 11, [], 0,
               0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
               0,0,sscfsSolid);
-
-
            SST.EndUpdate;
+
+
+           ///////////////////////////////
+           MDP.DisableControls;
+           if MDP.Active then MDP.Close;
+           MDP.Open;
+           col:=15;
+           i:=0;
+           for row:= 4 to 119 do
+           begin
+             if TryStrToDate(Get_Cell(SST, 0, row, col).AsString, temp_datetime) then
+             begin
+               i:=i+1;
+               if Odd(i) then
+               begin
+                MDP.Append;
+                MDP.FieldByName('Fiirst').AsDateTime:= temp_datetime;
+                MDP.Post;
+               end else
+               begin
+                MDP.Edit;
+                MDP.FieldByName('Second').AsDateTime:= temp_datetime;
+                MDP.FieldByName('R').Value:= row;
+                MDP.FieldByName('C').Value:= col;
+                MDP.Post;
+               end;
+             end;
+           end;
+           MDP.First;
+
+           col:=14;
+           while not MDP.Eof do
+           begin
+             col:=col+1;
+             DrawCell(SSR,
+             MDP.FieldByName('Fiirst').Value, current_Worksheet,current_row,col,True,ssahRight,ssavCenter,$0E,False,False,'Calibri', 11, [], 0,
+             0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+             0,0,sscfsSolid);
+             SetColumnWidth(SSR, current_Worksheet, col, 75);
+
+             col:=col+1;
+             DrawCell(SSR,
+             MDP.FieldByName('Second').Value, current_Worksheet,current_row,col,True,ssahRight,ssavCenter,$0E,False,False,'Calibri', 11, [], 0,
+             0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
+             0,0,sscfsSolid);
+             SetColumnWidth(SSR, current_Worksheet, col, 75);
+             MDP.Next;
+           end;
+           /////////////////////////////////////////////////////////
+
+
            Application.ProcessMessages;
          finally
            if FileExists(FileName_temp) then
@@ -408,7 +482,11 @@ begin
          end;
     end;
     DelProgress;
+
+         // Конец Пишем начинку
+
     FreezeRows(SSR, current_Worksheet, 3);
+    SetFocusedCell_(SSR,current_Worksheet,1,4);
     SSR.Sheets[current_Worksheet].EndUpdate;
   end;
 end;

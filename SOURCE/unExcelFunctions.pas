@@ -374,6 +374,9 @@ procedure CopyHyperlinks_to_Temp(SS:TdxSpreadSheet; Worksheet:integer);
 procedure CopyHyperlinks_from_Temp(SS:TdxSpreadSheet; Worksheet:integer);
 procedure RecalcFormulsWorksheet(SS:TdxSpreadSheet);
 procedure ExelSaveToFile(SS:TdxSpreadSheet; FileName:string);
+procedure ClearCells_(SS:TdxSpreadSheet; Worksheet:integer; col_left:integer; col_right:integer; row_up:integer; row_down:integer);
+procedure SetFocusedCell_(SS:TdxSpreadSheet; Worksheet:integer; col:integer; row:integer);
+
 
 implementation
 
@@ -1307,6 +1310,33 @@ procedure ExelSaveToFile(SS:TdxSpreadSheet; FileName:string);
 begin
   SS.SaveToFile(FileName);
 end;
+
+procedure ClearCells_(SS:TdxSpreadSheet; Worksheet:integer; col_left:integer; col_right:integer; row_up:integer; row_down:integer);
+var
+ ATableView: TdxSpreadSheetTableView;
+ ARect: TRect;
+begin
+  ATableView := TdxSpreadSheetTableView(SS.Sheets[Worksheet]);
+  ARect := Rect(col_left-1, row_up-1, col_right-1, row_down-1);
+
+  ATableView.BeginUpdate; // Оптимизация прорисовки
+  try
+    // Метод принимает TRect и флаги очистки
+    ATableView.ClearCells(ARect);
+  finally
+    ATableView.EndUpdate;
+  end;
+end;
+
+procedure SetFocusedCell_(SS:TdxSpreadSheet; Worksheet:integer; col:integer; row:integer);
+var
+ ATableView: TdxSpreadSheetTableView;
+begin
+  ATableView := TdxSpreadSheetTableView(SS.Sheets[Worksheet]);
+  ATableView.Selection.FocusedColumn := col-1;
+  ATableView.Selection.FocusedRow := row-1;
+end;
+
 
 
 

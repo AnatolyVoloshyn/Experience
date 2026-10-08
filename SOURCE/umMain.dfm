@@ -194,8 +194,6 @@ object frmMain: TfrmMain
     Height = 607
     Align = alClient
     TabOrder = 1
-    ExplicitTop = 69
-    ExplicitHeight = 540
     object Panel3: TPanel
       Left = 1
       Top = 1
@@ -203,9 +201,6 @@ object frmMain: TfrmMain
       Height = 605
       Align = alClient
       TabOrder = 0
-      ExplicitLeft = 454
-      ExplicitWidth = 732
-      ExplicitHeight = 538
       object Panel8: TPanel
         Left = 1
         Top = 1
@@ -213,7 +208,6 @@ object frmMain: TfrmMain
         Height = 36
         Align = alTop
         TabOrder = 0
-        ExplicitWidth = 1138
         DesignSize = (
           1182
           36)
@@ -227,7 +221,6 @@ object frmMain: TfrmMain
           ParentShowHint = False
           ShowHint = True
           TabOrder = 0
-          ExplicitLeft = 809
         end
         object cxButton3: TcxButton
           Left = 1048
@@ -239,7 +232,6 @@ object frmMain: TfrmMain
           ParentShowHint = False
           ShowHint = True
           TabOrder = 1
-          ExplicitLeft = 596
         end
       end
       object SSR: TdxSpreadSheet
@@ -249,9 +241,6 @@ object frmMain: TfrmMain
         Height = 567
         Align = alClient
         LookAndFeel.NativeStyle = False
-        ExplicitLeft = 2
-        ExplicitTop = 36
-        ExplicitHeight = 500
         Data = {
           9402000044585353763242461000000042465320000000000000000001000101
           010100000100000001004246532000000000424653200100000001000000200B
@@ -528,7 +517,7 @@ object frmMain: TfrmMain
     Indexes = <>
     SortOptions = []
     Left = 1053
-    Top = 458
+    Top = 398
     object MDFiirst: TDateField
       FieldName = 'Fiirst'
     end
@@ -539,6 +528,24 @@ object frmMain: TfrmMain
       FieldName = 'R'
     end
     object MDC: TIntegerField
+      FieldName = 'C'
+    end
+  end
+  object MDP: TdxMemData
+    Indexes = <>
+    SortOptions = []
+    Left = 1053
+    Top = 458
+    object DateField1: TDateField
+      FieldName = 'Fiirst'
+    end
+    object DateField2: TDateField
+      FieldName = 'Second'
+    end
+    object IntegerField1: TIntegerField
+      FieldName = 'R'
+    end
+    object IntegerField2: TIntegerField
       FieldName = 'C'
     end
   end
