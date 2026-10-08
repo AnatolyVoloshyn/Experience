@@ -411,68 +411,76 @@ end;
 procedure SetColumnWidth(SS:TdxSpreadSheet; Worksheet:integer; Column:integer; Width:Integer);
 var
 ATableView: TdxSpreadSheetTableView;
-AColumn: TdxSpreadSheetTableColumn;
+//AColumn: TdxSpreadSheetTableColumn;
 begin
  ATableView := TdxSpreadSheetTableView(SS.Sheets[Worksheet]);
  if(ATableView.Columns[Column-1] = nil) then
  begin
     ATableView.Columns.CreateItem(Column-1);
  end;
- AColumn := ATableView.Columns[Column-1];
- AColumn.Size:=Width;
- AColumn:=nil;
+// AColumn := ATableView.Columns[Column-1];
+// AColumn.Size:=Width;
+// AColumn:=nil;
+  ATableView.Columns[Column-1].Size:=Width;
+  freeandnil(ATableView.Columns[Column-1]);
 end;
 
 procedure SetRowHaight(SS:TdxSpreadSheet; Worksheet:integer; Row:integer; Haight:Integer);
 var
 ATableView: TdxSpreadSheetTableView;
-ARow: TdxSpreadSheetTableRow;
+//ARow: TdxSpreadSheetTableRow;
 begin
    ATableView := TdxSpreadSheetTableView(SS.Sheets[Worksheet]);
    if(ATableView.Rows[Row-1] = nil) then
    begin
     ATableView.Rows.CreateItem(Row-1);
    end;
-   ARow := ATableView.Rows[Row-1];
-   ARow.Size:=Haight;
-   ARow:=nil;
+//   ARow := ATableView.Rows[Row-1];
+//   ARow.Size:=Haight;
+//   ARow:=nil;
+   ATableView.Rows[Row-1].Size:=Haight;
+   Freeandnil(ATableView.Rows[Row-1]);
 end;
 
 procedure SetColumnAutoBestWidth(SS:TdxSpreadSheet; Worksheet:integer; Column:integer);
 var
 ATableView: TdxSpreadSheetTableView;
-AColumn: TdxSpreadSheetTableColumn;
+//AColumn: TdxSpreadSheetTableColumn;
 begin
  ATableView := TdxSpreadSheetTableView(SS.Sheets[Worksheet]);
  if(ATableView.Columns[Column-1] = nil) then
  begin
     ATableView.Columns.CreateItem(Column-1);
  end;
- AColumn := ATableView.Columns[Column-1];
- AColumn.ApplyBestFit;
- AColumn:=nil;
+// AColumn := ATableView.Columns[Column-1];
+// AColumn.ApplyBestFit;
+// AColumn:=nil;
+  ATableView.Columns[Column-1].ApplyBestFit;
+  Freeandnil(ATableView.Columns[Column-1]);
 end;
 
 procedure SetRowAutoBestHaight(SS:TdxSpreadSheet; Worksheet:integer; Row:integer);
 var
 ATableView: TdxSpreadSheetTableView;
-ARow: TdxSpreadSheetTableRow;
+//ARow: TdxSpreadSheetTableRow;
 begin
    ATableView := TdxSpreadSheetTableView(SS.Sheets[Worksheet]);
    if(ATableView.Rows[Row-1] = nil) then
    begin
     ATableView.Rows.CreateItem(Row-1);
    end;
-   ARow := ATableView.Rows[Row-1];
-   ARow.ApplyBestFit;
-   ARow:=nil;
+//   ARow := ATableView.Rows[Row-1];
+//   ARow.ApplyBestFit;
+//   ARow:=nil;
+   ATableView.Rows[Row-1].ApplyBestFit;
+   Freeandnil(ATableView.Rows[Row-1]);
 end;
 
 procedure SetMergeRowAutoBestHaight(SS:TdxSpreadSheet; Worksheet:integer; Row:integer; Column_From:integer; ColumnTo:integer; var set_row_Haight:Integer);
 var
 ATableView: TdxSpreadSheetTableView;
-ARow: TdxSpreadSheetTableRow;
-AColumn: TdxSpreadSheetTableColumn;
+//ARow: TdxSpreadSheetTableRow;
+//AColumn: TdxSpreadSheetTableColumn;
 n:integer;
 size_all_original:integer;
 size_all_colmns:Integer;
@@ -487,10 +495,11 @@ begin
   begin
    ATableView.Rows.CreateItem(Row-1);
   end;
-  ARow := ATableView.Rows[Row-1];
-  size_row_original:=ARow.Size;
-  ARow:=nil;
-
+//  ARow := ATableView.Rows[Row-1];
+//  size_row_original:=ARow.Size;
+//  ARow:=nil;
+   size_row_original:=ATableView.Rows[Row-1].Size;
+   FreeAndnil(ATableView.Rows[Row-1]);
 
   size_all_colmns:=0;
   for n:=Column_From-1 to ColumnTo-1 do
@@ -499,19 +508,24 @@ begin
      begin
        ATableView.Columns.CreateItem(n);
      end;
-     AColumn := ATableView.Columns[n];
-     size_all_colmns:=size_all_colmns+AColumn.Size;
-     AColumn:=nil;
+     //AColumn := ATableView.Columns[n];
+     //size_all_colmns:=size_all_colmns+AColumn.Size;
+     //AColumn:=nil;
+     size_all_colmns:=size_all_colmns+ATableView.Columns[n].Size;
+     Freeandnil(ATableView.Columns[n])
   end;
 
   if(ATableView.Columns[Column_From-1] = nil) then
   begin
     ATableView.Columns.CreateItem(Column_From-1);
   end;
-  AColumn := ATableView.Columns[Column_From-1];
-  size_all_original:=AColumn.Size;
-  AColumn.Size:=size_all_colmns;
-  AColumn:=nil;
+//  AColumn := ATableView.Columns[Column_From-1];
+//  size_all_original:=AColumn.Size;
+//  AColumn.Size:=size_all_colmns;
+//  AColumn:=nil;
+    size_all_original:=ATableView.Columns[Column_From-1].Size;
+    ATableView.Columns[Column_From-1].Size:=size_all_colmns;
+    FreeAndNil(ATableView.Columns[Column_From-1]);
 
   SetRowAutoBestHaight(SS, Worksheet, Row);
 
@@ -519,11 +533,22 @@ begin
   begin
    ATableView.Rows.CreateItem(Row-1);
   end;
-  ARow := ATableView.Rows[Row-1];
+  //ARow := ATableView.Rows[Row-1];
+  //Count_row:=ARow.Size/_DefaultRowHeight;
+  Count_row:=ATableView.Rows[Row-1].Size/_DefaultRowHeight;
 
-  Count_row:=ARow.Size/_DefaultRowHeight;
+//  if ARow.Size>=size_row_original then
+//  begin
+////    set_row_Haight:=ARow.Size
+//    set_row_Haight:=Ceil(Count_row*size_row_original);
+//  end
+//  else
+//  begin
+//    set_row_Haight:=size_row_original;
+//  end;
+//  ARow:=nil;
 
-  if ARow.Size>=size_row_original then
+  if ATableView.Rows[Row-1].Size>=size_row_original then
   begin
 //    set_row_Haight:=ARow.Size
     set_row_Haight:=Ceil(Count_row*size_row_original);
@@ -532,16 +557,20 @@ begin
   begin
     set_row_Haight:=size_row_original;
   end;
-  ARow:=nil;
+  FreeAndnil(ATableView.Rows[Row-1]);
+
+
 
 
   if(ATableView.Columns[Column_From-1] = nil) then
   begin
     ATableView.Columns.CreateItem(Column_From-1);
   end;
-  AColumn := ATableView.Columns[Column_From-1];
-  AColumn.Size:=size_all_original;
-  AColumn:=nil;
+//  AColumn := ATableView.Columns[Column_From-1];
+//  AColumn.Size:=size_all_original;
+//  AColumn:=nil;
+    ATableView.Columns[Column_From-1].Size:=size_all_original;
+    FreeandNil(ATableView.Columns[Column_From-1]);
 end;
 
 procedure GroupRows(SS:TdxSpreadSheet; Worksheet:integer; AFirstRow, ALastRow: Integer);
@@ -1199,7 +1228,7 @@ end;
 function  GetRowHaight(SS:TdxSpreadSheet; Worksheet:integer; Row:integer):integer;
 var
 ATableView: TdxSpreadSheetTableView;
-ARow: TdxSpreadSheetTableRow;
+//ARow: TdxSpreadSheetTableRow;
 begin
   ATableView := TdxSpreadSheetTableView(SS.Sheets[Worksheet]);
 
@@ -1207,9 +1236,11 @@ begin
   begin
    ATableView.Rows.CreateItem(Row-1);
   end;
-  ARow := ATableView.Rows[Row-1];
-  Result:=ARow.Size;
-  ARow:=nil;
+//  ARow := ATableView.Rows[Row-1];
+//  Result:=ARow.Size;
+//  ARow:=nil;
+  Result:=ATableView.Rows[Row-1].Size;
+  Freeandnil(ATableView.Rows[Row-1]);
 end;
 
 procedure CopyHyperlinks_to_Temp(SS:TdxSpreadSheet; Worksheet:integer);

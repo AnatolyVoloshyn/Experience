@@ -68,7 +68,7 @@ type
     const Mask ='вислуга*.xlsx';
     //const Mask ='вислуга ВОЛОШИН.xlsx';
     //const Mask ='вислуга БАСЮК.xlsx';
-    var Folder:string;
+    //var Folder:string;
     var DateRasc:TDateTime;
     function GetFileCount(const APath:string; Mask: string): Integer;
     function CopyFile_ (sFileName:string):string;
@@ -78,6 +78,7 @@ type
 
 var
   frmMain: TfrmMain;
+  Folder:string;
 
 implementation
 
