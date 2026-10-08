@@ -489,6 +489,7 @@ begin
     FreezeRows(SSR, current_Worksheet, 3);
     SetFocusedCell_(SSR,current_Worksheet,1,4);
     SSR.Sheets[current_Worksheet].EndUpdate;
+    RecalcFormulsWorksheet(SSR);
   end;
 end;
 
