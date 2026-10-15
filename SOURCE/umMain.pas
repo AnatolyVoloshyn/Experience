@@ -373,7 +373,8 @@ begin
               0,0,sscfsSolid);
 
           DrawCell(SSR,
-              ExtractFileName(FileName), current_Worksheet,current_row,2,True,ssahLeft,ssavCenter,$31,False,False,'Calibri', 11, [], 0,
+              //ExtractFileName(FileName)
+              FileName, current_Worksheet,current_row,2,True,ssahLeft,ssavCenter,$31,False,False,'Calibri', 11, [], 0,
               0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
               0,0,sscfsSolid);
 
