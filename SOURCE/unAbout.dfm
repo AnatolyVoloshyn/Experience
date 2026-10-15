@@ -25,7 +25,7 @@ object frmAbout: TfrmAbout
       Top = 12
       Width = 75
       Height = 15
-      Caption = #1042#1077#1088#1089#1080#1103' 1.0.0.2'
+      Caption = #1042#1077#1088#1089#1080#1103' 1.0.0.3'
     end
     object Label2: TLabel
       Left = 16

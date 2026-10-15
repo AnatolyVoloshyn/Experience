@@ -169,6 +169,7 @@ var
 begin
   // Получаем массив путей к файлам
   Files := TDirectory.GetFiles(APath,
+           TSearchOption.soAllDirectories,
            function(const Path: string; const SearchRec: TSearchRec): Boolean
            begin
              Result := MatchesMask(WideUpperCase(SearchRec.Name), WideUpperCase(Mask));
@@ -314,6 +315,7 @@ begin
      current_row:=3;
      ShowProgress(Self, '', GetFileCount(Folder, Mask), 'Анализ указанной папки...');
      for FileName in TDirectory.GetFiles(Folder,
+                     TSearchOption.soAllDirectories,
                      function(const Path: string; const SearchRec: TSearchRec): Boolean
                      begin
                        Result := MatchesMask(WideUpperCase(SearchRec.Name), WideUpperCase(Mask));
