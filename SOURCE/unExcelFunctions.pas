@@ -7,7 +7,7 @@ uses dxSpreadSheet, dxSpreadSheetCore, System.Types, System.Math, dxSpreadSheetG
      dxSpreadSheetClasses, dxSpreadSheetContainers, dxSpreadSheetFormulas,
      dxSpreadSheetHyperlinks, dxSpreadSheetFunctions, dxSpreadSheetStyles,
      dxSpreadSheetPrinting, dxSpreadSheetTypes,
-     dxSpreadSheetUtils, dxSpreadSheetFormattedTextUtils, System.SysUtils, dxHashUtils;
+     dxSpreadSheetUtils, dxSpreadSheetFormattedTextUtils, System.SysUtils, dxHashUtils, System.DateUtils;
 
 
  var arr_hiperlinks:array of array of variant;
@@ -378,6 +378,103 @@ procedure ClearCells_(SS:TdxSpreadSheet; Worksheet:integer; col_left:integer; co
 procedure SetFocusedCell_(SS:TdxSpreadSheet; Worksheet:integer; col:integer; row:integer);
 
 
+ procedure DrawCellDateTime(SS:TdxSpreadSheet;
+                    CellD:TDateTime; //То, что хотим показать
+                    Worksheet:integer; //Страница
+                    n_row:integer;  //Координаты строки
+                    n_col:integer; //Координаты столбца
+
+                    FormulaChecking:boolean = True; //Это формула?
+                    HAlign: TdxSpreadSheetDataAlignHorz = ssahGeneral; //Как выравнивать по горизонтали
+                    //(ssahGeneral, ssahLeft, ssahCenter, ssahRight, ssahFill, ssahJustify, ssahDistributed)
+                    VAlign: TdxSpreadSheetDataAlignVert = ssavBottom; //Как выравнивать по вертикали
+                    //(ssavTop, ssavCenter, ssavBottom, ssavJustify, ssavDistributed)
+                    sFormat:Integer=$00; //Форматирование ячейки
+                                 // $00 GENERAL
+                                 // $01 0
+                                 // $02 0.00
+                                 // $03 #,##0
+                                 // $04 #,##0.00
+                                 // $05 $#,##0_);($#,##0)
+                                 // $06 $#,##0_);[Red]($#,##0)
+                                 // $07 $#,##0.00_);($#,##0.00)
+                                 // $08 $#,##0.00_);[Red]($#,##0.00)
+                                 // $09 0%
+                                 // $0a 0.00%
+                                 // $0b 0.00E+00
+                                 // $0c # ?/?
+                                 // $0d # ??/??
+                                 // $0e m/d/yy
+                                 // $0f d-mmm-yy
+                                 // $10 d-mmm
+                                 // $11 mmm-yy
+                                 // $12 h:mm AM/PM
+                                 // $13 h:mm:ss AM/PM
+                                 // $14 h:mm
+                                 // $15 h:mm:ss
+                                 // $16 m/d/yy h:mm
+                                 // $25 #,##0_);(#,##0)
+                                 // $26 #,##0_);[Red](#,##0)
+                                 // $27 #,##0.00_);(#,##0.00)
+                                 // $28 #,##0.00_);[Red](#,##0.00)
+                                 // $29 _(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)
+                                 // $2a _($* #,##0_);_($* (#,##0);_($* "-"_);_
+                                 // $2b _(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)
+                                 // $2c _($* #,##0.00);_($* (#,##0.00);_($* "-"??_);_(@_)
+                                 // $2d mm:ss
+                                 // $2e [h]:mm:ss
+                                 // $2f mm:ss.0
+                                 // $30 ##0.0E+0
+                                 // $31 @
+
+                    dWordWrap:boolean=False; //Если True, то содержание ячейки переносится, если оно не вписывается в ячейку по горизонтали.
+                    //в противном случае, содержимое ячейки распространяется на пространство, занимаемое соседней ячейки
+                    dShrinkToFit:boolean=False; //Если True, то осуществляется подгонка ячейки по ширине
+
+                    //Шрифт ячейки
+                    FontName:TFontName='';
+                    FontSize:integer=0;
+                    FontStyle:TFontStyles=[]; // (fsBold, fsItalic, fsUnderline, fsStrikeOut);
+                                          // например  ([], [fsBold], [fsItalic], [fsBold, fsUnderline], [fsBold, fsItalic, fsStrikeOut])
+                    FontColor: TColor=0;
+
+                    //Бордюры ячейки
+                    LeftColor: TColor=0;
+                    LeftStyle: TdxSpreadSheetCellBorderStyle=sscbsDefault; //(sscbsDefault, sscbsHair, sscbsDotted, sscbsDashDotDot, sscbsDashDot, sscbsDashed,
+                                                                  // sscbsThin, sscbsMediumDashDotDot, sscbsSlantedDashDot, sscbsMediumDashDot,
+                                                                  //sscbsMediumDashed, sscbsMedium, sscbsThick, sscbsDouble, sscbsNone)
+
+                    TopColor: TColor=0;
+                    TopStyle: TdxSpreadSheetCellBorderStyle=sscbsDefault;  //(sscbsDefault, sscbsHair, sscbsDotted, sscbsDashDotDot, sscbsDashDot, sscbsDashed,
+                                                                  // sscbsThin, sscbsMediumDashDotDot, sscbsSlantedDashDot, sscbsMediumDashDot,
+                                                                  //sscbsMediumDashed, sscbsMedium, sscbsThick, sscbsDouble, sscbsNone)
+
+                    RightColor: TColor=0;
+                    RightStyle: TdxSpreadSheetCellBorderStyle=sscbsDefault; //(sscbsDefault, sscbsHair, sscbsDotted, sscbsDashDotDot, sscbsDashDot, sscbsDashed,
+                                                                   // sscbsThin, sscbsMediumDashDotDot, sscbsSlantedDashDot, sscbsMediumDashDot,
+                                                                   //sscbsMediumDashed, sscbsMedium, sscbsThick, sscbsDouble, sscbsNone)
+
+
+                    BottomColor: TColor=0;
+                    BottomStyle: TdxSpreadSheetCellBorderStyle=sscbsDefault;//(sscbsDefault, sscbsHair, sscbsDotted, sscbsDashDotDot, sscbsDashDot, sscbsDashed,
+                                                                   // sscbsThin, sscbsMediumDashDotDot, sscbsSlantedDashDot, sscbsMediumDashDot,
+                                                                   //sscbsMediumDashed, sscbsMedium, sscbsThick, sscbsDouble, sscbsNone)
+
+
+                    //Красим саму ячейку
+                    wBackgroundColor: TColor=0;
+                    wForegroundColor: TColor=0;
+                    wStyle: TdxSpreadSheetCellFillStyle=sscfsSolid // (sscfsSolid, sscfsGray75, sscfsGray50, sscfsGray25, sscfsGray12, sscfsGray6,
+                                                                 // sscfsHorzStrip, sscfsVertStrip, sscfsRevDiagonalStrip, sscfsDiagonalStrip,
+                                                                 // sscfsDiagCrossHatch, sscfsThickCrossHatch, sscfsThinHorzStrip, sscfsThinVertStrip,
+                                                                 // sscfsThinRevDiagonalStrip, sscfsThinDiagonalStrip, sscfsThinDiagCrossHatch,
+                                                                 // sscfsThinThickCrossHatch)
+                    );
+
+
+
+
+
 implementation
 
 
@@ -422,7 +519,7 @@ begin
 // AColumn.Size:=Width;
 // AColumn:=nil;
   ATableView.Columns[Column-1].Size:=Width;
-  freeandnil(ATableView.Columns[Column-1]);
+//  freeandnil(ATableView.Columns[Column-1]);
 end;
 
 procedure SetRowHaight(SS:TdxSpreadSheet; Worksheet:integer; Row:integer; Haight:Integer);
@@ -439,7 +536,7 @@ begin
 //   ARow.Size:=Haight;
 //   ARow:=nil;
    ATableView.Rows[Row-1].Size:=Haight;
-   Freeandnil(ATableView.Rows[Row-1]);
+//   Freeandnil(ATableView.Rows[Row-1]);
 end;
 
 procedure SetColumnAutoBestWidth(SS:TdxSpreadSheet; Worksheet:integer; Column:integer);
@@ -456,7 +553,7 @@ begin
 // AColumn.ApplyBestFit;
 // AColumn:=nil;
   ATableView.Columns[Column-1].ApplyBestFit;
-  Freeandnil(ATableView.Columns[Column-1]);
+//  Freeandnil(ATableView.Columns[Column-1]);
 end;
 
 procedure SetRowAutoBestHaight(SS:TdxSpreadSheet; Worksheet:integer; Row:integer);
@@ -473,7 +570,7 @@ begin
 //   ARow.ApplyBestFit;
 //   ARow:=nil;
    ATableView.Rows[Row-1].ApplyBestFit;
-   Freeandnil(ATableView.Rows[Row-1]);
+//   Freeandnil(ATableView.Rows[Row-1]);
 end;
 
 procedure SetMergeRowAutoBestHaight(SS:TdxSpreadSheet; Worksheet:integer; Row:integer; Column_From:integer; ColumnTo:integer; var set_row_Haight:Integer);
@@ -499,7 +596,7 @@ begin
 //  size_row_original:=ARow.Size;
 //  ARow:=nil;
    size_row_original:=ATableView.Rows[Row-1].Size;
-   FreeAndnil(ATableView.Rows[Row-1]);
+//   FreeAndnil(ATableView.Rows[Row-1]);
 
   size_all_colmns:=0;
   for n:=Column_From-1 to ColumnTo-1 do
@@ -512,7 +609,7 @@ begin
      //size_all_colmns:=size_all_colmns+AColumn.Size;
      //AColumn:=nil;
      size_all_colmns:=size_all_colmns+ATableView.Columns[n].Size;
-     Freeandnil(ATableView.Columns[n])
+//     Freeandnil(ATableView.Columns[n])
   end;
 
   if(ATableView.Columns[Column_From-1] = nil) then
@@ -525,7 +622,7 @@ begin
 //  AColumn:=nil;
     size_all_original:=ATableView.Columns[Column_From-1].Size;
     ATableView.Columns[Column_From-1].Size:=size_all_colmns;
-    FreeAndNil(ATableView.Columns[Column_From-1]);
+//    FreeAndNil(ATableView.Columns[Column_From-1]);
 
   SetRowAutoBestHaight(SS, Worksheet, Row);
 
@@ -557,7 +654,7 @@ begin
   begin
     set_row_Haight:=size_row_original;
   end;
-  FreeAndnil(ATableView.Rows[Row-1]);
+//  FreeAndnil(ATableView.Rows[Row-1]);
 
 
 
@@ -570,7 +667,7 @@ begin
 //  AColumn.Size:=size_all_original;
 //  AColumn:=nil;
     ATableView.Columns[Column_From-1].Size:=size_all_original;
-    FreeandNil(ATableView.Columns[Column_From-1]);
+//    FreeandNil(ATableView.Columns[Column_From-1]);
 end;
 
 procedure GroupRows(SS:TdxSpreadSheet; Worksheet:integer; AFirstRow, ALastRow: Integer);
@@ -1240,7 +1337,7 @@ begin
 //  Result:=ARow.Size;
 //  ARow:=nil;
   Result:=ATableView.Rows[Row-1].Size;
-  Freeandnil(ATableView.Rows[Row-1]);
+//  Freeandnil(ATableView.Rows[Row-1]);
 end;
 
 procedure CopyHyperlinks_to_Temp(SS:TdxSpreadSheet; Worksheet:integer);
@@ -1368,6 +1465,150 @@ begin
   ATableView.Selection.FocusedRow := row-1;
 end;
 
+procedure DrawCellDateTime(SS:TdxSpreadSheet;
+                    CellD:TDateTime; //То, что хотим показать
+                    Worksheet:integer; //Страница
+                    n_row:integer;  //Координаты строки
+                    n_col:integer; //Координаты столбца
+
+                    FormulaChecking:boolean = True; //Это формула?
+                    HAlign: TdxSpreadSheetDataAlignHorz = ssahGeneral; //Как выравнивать по горизонтали
+                    //(ssahGeneral, ssahLeft, ssahCenter, ssahRight, ssahFill, ssahJustify, ssahDistributed)
+                    VAlign: TdxSpreadSheetDataAlignVert = ssavBottom; //Как выравнивать по вертикали
+                    //(ssavTop, ssavCenter, ssavBottom, ssavJustify, ssavDistributed)
+                    sFormat:Integer=$00; //Форматирование ячейки
+                                 // $00 GENERAL
+                                 // $01 0
+                                 // $02 0.00
+                                 // $03 #,##0
+                                 // $04 #,##0.00
+                                 // $05 $#,##0_);($#,##0)
+                                 // $06 $#,##0_);[Red]($#,##0)
+                                 // $07 $#,##0.00_);($#,##0.00)
+                                 // $08 $#,##0.00_);[Red]($#,##0.00)
+                                 // $09 0%
+                                 // $0a 0.00%
+                                 // $0b 0.00E+00
+                                 // $0c # ?/?
+                                 // $0d # ??/??
+                                 // $0e m/d/yy
+                                 // $0f d-mmm-yy
+                                 // $10 d-mmm
+                                 // $11 mmm-yy
+                                 // $12 h:mm AM/PM
+                                 // $13 h:mm:ss AM/PM
+                                 // $14 h:mm
+                                 // $15 h:mm:ss
+                                 // $16 m/d/yy h:mm
+                                 // $25 #,##0_);(#,##0)
+                                 // $26 #,##0_);[Red](#,##0)
+                                 // $27 #,##0.00_);(#,##0.00)
+                                 // $28 #,##0.00_);[Red](#,##0.00)
+                                 // $29 _(* #,##0_);_(* (#,##0);_(* "-"_);_(@_)
+                                 // $2a _($* #,##0_);_($* (#,##0);_($* "-"_);_
+                                 // $2b _(* #,##0.00_);_(* (#,##0.00);_(* "-"??_);_(@_)
+                                 // $2c _($* #,##0.00);_($* (#,##0.00);_($* "-"??_);_(@_)
+                                 // $2d mm:ss
+                                 // $2e [h]:mm:ss
+                                 // $2f mm:ss.0
+                                 // $30 ##0.0E+0
+                                 // $31 @
+
+                    dWordWrap:boolean=False; //Если True, то содержание ячейки переносится, если оно не вписывается в ячейку по горизонтали.
+                    //в противном случае, содержимое ячейки распространяется на пространство, занимаемое соседней ячейки
+                    dShrinkToFit:boolean=False; //Если True, то осуществляется подгонка ячейки по ширине
+
+                    //Шрифт ячейки
+                    FontName:TFontName='';
+                    FontSize:integer=0;
+                    FontStyle:TFontStyles=[]; // (fsBold, fsItalic, fsUnderline, fsStrikeOut);
+                                          // например  ([], [fsBold], [fsItalic], [fsBold, fsUnderline], [fsBold, fsItalic, fsStrikeOut])
+                    FontColor: TColor=0;
+
+                    //Бордюры ячейки
+                    LeftColor: TColor=0;
+                    LeftStyle: TdxSpreadSheetCellBorderStyle=sscbsDefault; //(sscbsDefault, sscbsHair, sscbsDotted, sscbsDashDotDot, sscbsDashDot, sscbsDashed,
+                                                                  // sscbsThin, sscbsMediumDashDotDot, sscbsSlantedDashDot, sscbsMediumDashDot,
+                                                                  //sscbsMediumDashed, sscbsMedium, sscbsThick, sscbsDouble, sscbsNone)
+
+                    TopColor: TColor=0;
+                    TopStyle: TdxSpreadSheetCellBorderStyle=sscbsDefault;  //(sscbsDefault, sscbsHair, sscbsDotted, sscbsDashDotDot, sscbsDashDot, sscbsDashed,
+                                                                  // sscbsThin, sscbsMediumDashDotDot, sscbsSlantedDashDot, sscbsMediumDashDot,
+                                                                  //sscbsMediumDashed, sscbsMedium, sscbsThick, sscbsDouble, sscbsNone)
+
+                    RightColor: TColor=0;
+                    RightStyle: TdxSpreadSheetCellBorderStyle=sscbsDefault; //(sscbsDefault, sscbsHair, sscbsDotted, sscbsDashDotDot, sscbsDashDot, sscbsDashed,
+                                                                   // sscbsThin, sscbsMediumDashDotDot, sscbsSlantedDashDot, sscbsMediumDashDot,
+                                                                   //sscbsMediumDashed, sscbsMedium, sscbsThick, sscbsDouble, sscbsNone)
+
+
+                    BottomColor: TColor=0;
+                    BottomStyle: TdxSpreadSheetCellBorderStyle=sscbsDefault;//(sscbsDefault, sscbsHair, sscbsDotted, sscbsDashDotDot, sscbsDashDot, sscbsDashed,
+                                                                   // sscbsThin, sscbsMediumDashDotDot, sscbsSlantedDashDot, sscbsMediumDashDot,
+                                                                   //sscbsMediumDashed, sscbsMedium, sscbsThick, sscbsDouble, sscbsNone)
+
+
+                    //Красим саму ячейку
+                    wBackgroundColor: TColor=0;
+                    wForegroundColor: TColor=0;
+                    wStyle: TdxSpreadSheetCellFillStyle=sscfsSolid // (sscfsSolid, sscfsGray75, sscfsGray50, sscfsGray25, sscfsGray12, sscfsGray6,
+                                                                 // sscfsHorzStrip, sscfsVertStrip, sscfsRevDiagonalStrip, sscfsDiagonalStrip,
+                                                                 // sscfsDiagCrossHatch, sscfsThickCrossHatch, sscfsThinHorzStrip, sscfsThinVertStrip,
+                                                                 // sscfsThinRevDiagonalStrip, sscfsThinDiagonalStrip, sscfsThinDiagCrossHatch,
+                                                                 // sscfsThinThickCrossHatch)
+                    );
+ var
+   Cell: TdxSpreadSheetCell;
+   ATableView: TdxSpreadSheetTableView;
+ begin
+   ATableView := TdxSpreadSheetTableView(SS.Sheets[Worksheet]);
+   Cell:=ATableView.CreateCell(n_row-1, n_col-1);
+   //Cell.Style.AlignHorz:=HAlign;
+   //Cell.Style.AlignVert:=VAlign;
+   //Cell.Style.DataFormat.FormatCodeID:=sFormat;
+   //Cell.Style.WordWrap:=dWordWrap;
+   //Cell.Style.ShrinkToFit:=dShrinkToFit;
+
+//   with Cell.Style.Font do
+//   begin
+//     if FontName<>'' then
+//     Name := FontName;
+//
+//     if FontSize<>0 then
+//     Size := FontSize;
+//
+//     if FontStyle<>[] then
+//     Style := FontStyle;
+//
+//     if FontColor<>0 then
+//     Color:=FontColor;
+//   end;
+//
+//   if LeftColor<>0 then
+//   Cell.Style.Borders[bLeft].Color := LeftColor;
+//   Cell.Style.Borders[bLeft].Style := LeftStyle;
+//   if TopColor<>0 then
+//   Cell.Style.Borders[bTop].Color := TopColor;
+//   Cell.Style.Borders[bTop].Style := TopStyle;
+//   if RightColor<>0 then
+//   Cell.Style.Borders[bRight].Color := RightColor;
+//   Cell.Style.Borders[bRight].Style := RightStyle;
+//   if BottomColor<>0 then
+//   Cell.Style.Borders[bBottom].Color := BottomColor;
+//   Cell.Style.Borders[bBottom].Style := BottomStyle;
+//
+//   with Cell.Style.Brush do
+//   begin
+//    if wBackgroundColor<>0 then
+//    BackgroundColor := wBackgroundColor;
+//    if wForegroundColor<>0 then
+//    ForegroundColor := wForegroundColor;
+//    Style := wStyle;
+//   end;
+
+   //Cell.SetText(CellText, FormulaChecking);
+   Cell.AsDateTime:= CellD;
+ end;
 
 
 

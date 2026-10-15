@@ -72,6 +72,7 @@ type
     var DateRasc:TDateTime;
     function GetFileCount(const APath:string; Mask: string): Integer;
     function CopyFile_ (sFileName:string):string;
+    procedure LoadShablon(SS:TdxSpreadSheet;sFileName:string);
   public
     { Public declarations }
   end;
@@ -186,7 +187,6 @@ begin
   Folder:=lbFolder.Caption;
   if (DirectoryExists(Folder)) and (DatePicker1.Date<>0) and (GetFileCount(Folder, Mask)>0) then
   begin
-
 //     //Рисуем заголовок в основном excele
 //     SSR.ClearAll;
 //     SSR.OptionsView.R1C1Reference:=True;
@@ -194,12 +194,16 @@ begin
 //     SSR.Sheets[current_Worksheet].BeginUpdate;
 
      //Загружаем шаблон
-     SSR.LoadFromFile(ExtractFileDir(Application.ExeName)+'\Вислуга-Вся.xlsx');
+     //SSR.LoadFromFile(ExtractFileDir(Application.ExeName)+'\Вислуга-Вся.xlsx');
+     LoadShablon(SSR,ExtractFileDir(Application.ExeName)+'\Вислуга-Вся.xlsx');
+     Application.ProcessMessages;
      SSR.OptionsView.R1C1Reference:=True;
      current_Worksheet:=SSR.Sheets[0].Index;
+     //Удаляем начинку
      ClearCells_(SSR,current_Worksheet, 1, 54, 4, 1000);
      SetFocusedCell_(SSR,current_Worksheet,1,4);
      SSR.Sheets[current_Worksheet].BeginUpdate;
+
 
      current_row:=1;
      DrawCell(SSR,
@@ -211,12 +215,11 @@ begin
              'Сформирован: '+FormatDateTime('dd.mm.yyyy HH:NN:SS',now), current_Worksheet,current_row,5,True,ssahLeft,ssavCenter,$00,False,False,'Calibri', 11, [], 0,
               0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,0,sscbsDefault,
               0,0,sscfsSolid);
-     //Удаляем начинку
 
 
 
-     //Уже есть в шаблоне
      {
+     //Уже есть в шаблоне
      current_row:=2;
      SetColumnWidth(SSR, current_Worksheet, 1, 30);
      DrawCellMergeCells(SSR,current_Worksheet, 1, current_row, 1, current_row+1,
@@ -473,7 +476,7 @@ begin
              SetColumnWidth(SSR, current_Worksheet, col, 75);
              MDP.Next;
            end;
-           /////////////////////////////////////////////////////////
+          /////////////////////////////////////////////////////////
 
 
            Application.ProcessMessages;
@@ -483,10 +486,10 @@ begin
          end;
     end;
     DelProgress;
-
-         // Конец Пишем начинку
+    // Конец Пишем начинку
 
     FreezeRows(SSR, current_Worksheet, 3);
+    FreezeColumns(SSR, current_Worksheet, 3);
     SetFocusedCell_(SSR,current_Worksheet,1,4);
     SSR.Sheets[current_Worksheet].EndUpdate;
     RecalcFormulsWorksheet(SSR);
@@ -499,6 +502,32 @@ begin
   begin
    CopyFile(PWideChar(sFileName), PWideChar(ChangeFileExt(ExtractFileName(sFileName),'')+'_временный.xlsx'), False);
    Result:=ChangeFileExt(ExtractFileName(sFileName),'')+'_временный.xlsx';
+  end;
+end;
+
+procedure TfrmMain.LoadShablon (SS:TdxSpreadSheet; sFileName:string);
+var
+ FileStream: TFileStream;
+ MemStream: TMemoryStream;
+begin
+  if not FileExists(sFileName) then
+    raise Exception.Create('Файл не найден: ' + sFileName);
+
+  FileStream := TFileStream.Create(sFileName, fmOpenRead or fmShareDenyNone);
+  MemStream := TMemoryStream.Create;
+  try
+    // Копируем файл в память
+    MemStream.CopyFrom(FileStream, 0);
+    MemStream.Position := 0;
+
+    // Освобождаем файл на диске СРАЗУ
+    FreeAndNil(FileStream);
+
+    // Загружаем компонент из памяти
+    SS.LoadFromStream(MemStream);
+  finally
+    if Assigned(FileStream) then FileStream.Free;
+    MemStream.Free;
   end;
 end;
 

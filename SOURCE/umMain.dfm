@@ -54,6 +54,7 @@ object frmMain: TfrmMain
       Top = 27
       Width = 118
       Height = 15
+      Anchors = [akTop, akRight]
       Caption = '3. '#1053#1072#1078#1084#1080#1090#1077' '#1082#1085#1086#1087#1072#1088#1100
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
@@ -113,6 +114,7 @@ object frmMain: TfrmMain
     object cxImage1: TcxImage
       Left = 982
       Top = 22
+      Anchors = [akTop, akRight]
       AutoSize = True
       Picture.Data = {
         0D546478536D617274496D61676589504E470D0A1A0A0000000D494844520000
@@ -240,7 +242,7 @@ object frmMain: TfrmMain
         Width = 1182
         Height = 567
         Align = alClient
-        LookAndFeel.NativeStyle = False
+        LookAndFeel.NativeStyle = True
         Data = {
           9402000044585353763242461000000042465320000000000000000001000101
           010100000100000001004246532000000000424653200100000001000000200B
