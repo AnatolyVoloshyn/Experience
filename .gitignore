@@ -14,7 +14,7 @@ $ cat .gitignore
 *.pec2bac
 *.xml
 *.vlb
-*.res
+#*.res
 *.dsv
 *.xlsx
 *.xlsm
